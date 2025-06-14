@@ -1,103 +1,188 @@
-import Image from "next/image";
+'use client'
+
+import { useState } from 'react'
+import TeamInputList from '@/components/TeamInputList'
+import { generateFirstRoundMatches } from '@/lib/generateMatches'
+import { Round, Tournament } from '@/types/tournament'
+import BracketGrid from '@/components/BracketGrid'
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [teamCount, setTeamCount] = useState<number>(4)
+  const [teamNames, setTeamNames] = useState<string[]>(Array(4).fill(''))
+  const [tournament, setTournament] = useState<Tournament>([])
+  const [champion, setChampion] = useState<string | null>(null)
+  const [showPreview, setShowPreview] = useState<boolean>(false)
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  const handleTeamCountChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const count = parseInt(e.target.value)
+    setTeamCount(count)
+    setTeamNames(Array(count).fill(''))
+    setTournament([])
+    setChampion(null)
+    setShowPreview(false)
+  }
+
+  const handleReset = () => {
+    setTeamCount(4)
+    setTeamNames(Array(4).fill(''))
+    setTournament([])
+    setChampion(null)
+    setShowPreview(false)
+  }
+
+  const handleTeamNameChange = (index: number, name: string) => {
+    const updated = [...teamNames]
+    updated[index] = name
+    setTeamNames(updated)
+
+    const filled = updated.filter((n) => n.trim() !== '')
+    setShowPreview(filled.length === teamCount)
+  }
+
+  const handleStart = () => {
+    const filled = teamNames.filter((name) => name.trim() !== '')
+    if (filled.length !== teamCount) {
+      alert('Por favor completa todos los nombres de equipos.')
+      return
+    }
+
+    const firstMatches = generateFirstRoundMatches(filled)
+    const firstRound: Round = {
+      name: 'Primera ronda',
+      matches: firstMatches,
+    }
+
+    setTournament([firstRound])
+    setChampion(null)
+    setShowPreview(false)
+  }
+
+  const handleSelectWinner = (roundIndex: number, matchIndex: number, selected: string) => {
+    const updatedTournament = [...tournament]
+    const updatedMatch = {
+      ...updatedTournament[roundIndex].matches[matchIndex],
+      winner: selected,
+    }
+    updatedTournament[roundIndex].matches[matchIndex] = updatedMatch
+    setTournament(updatedTournament)
+  }
+
+  const handleNextRound = () => {
+    const lastRound = tournament[tournament.length - 1]
+    const winners = lastRound.matches.map((m) => m.winner!).filter(Boolean)
+
+    if (winners.length === 1) {
+      setChampion(winners[0])
+      return
+    }
+    const nextMatches = generateFirstRoundMatches(winners)
+    const nextRound: Round = {
+      name: `Ronda ${tournament.length + 1}`,
+      matches: nextMatches,
+    }
+
+    setTournament([...tournament, nextRound])
+  }
+
+  return (
+    <main className="min-h-screen bg-gray-900 p-6 space-y-10 text-gray-100">
+      <div className="w-full max-w-md mx-auto bg-gray-800 p-6 rounded-2xl shadow-lg space-y-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-center text-white">
+          Simulador de Torneos
+        </h1>
+
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-300">Cantidad de equipos:</label>
+          <select
+            className="w-full p-2 border border-gray-500 rounded text-gray-900 bg-white"
+            value={teamCount}
+            onChange={handleTeamCountChange}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            {[4, 8, 16, 32].map((n) => (
+              <option key={n} value={n}>
+                {n} equipos
+              </option>
+            ))}
+          </select>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+
+        <TeamInputList
+          count={teamCount}
+          names={teamNames}
+          onNameChange={handleTeamNameChange}
+        />
+
+        <button
+          onClick={handleStart}
+          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+          Comenzar torneo
+        </button>
+
+        <button
+          onClick={handleReset}
+          className="w-full bg-red-600 text-white py-2 rounded hover:bg-red-700 transition"
         >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+          Reiniciar torneo
+        </button>
+
+        {tournament.map((round, roundIndex) => (
+          <div key={roundIndex} className="mt-6 space-y-3">
+            <h2 className="text-lg font-semibold text-center text-white">{round.name}</h2>
+
+            {round.matches.map((match, matchIndex) => (
+              <div key={matchIndex} className="flex items-center justify-center gap-2 bg-gray-700 p-2 rounded">
+                <button
+                  onClick={() => handleSelectWinner(roundIndex, matchIndex, match.teamA)}
+                  className={`px-3 py-1 rounded font-semibold border-2 ${
+                    match.winner === match.teamA
+                      ? 'bg-blue-500 text-white border-blue-500'
+                      : 'bg-gray-800 text-white border-gray-500 hover:bg-gray-700'
+                  }`}
+                >
+                  {match.teamA}
+                </button>
+
+                <span className="font-medium text-gray-300">vs</span>
+
+                <button
+                  onClick={() => handleSelectWinner(roundIndex, matchIndex, match.teamB)}
+                  className={`px-3 py-1 rounded font-semibold border-2 ${
+                    match.winner === match.teamB
+                      ? 'bg-blue-500 text-white border-blue-500'
+                      : 'bg-gray-800 text-white border-gray-500 hover:bg-gray-700'
+                  }`}
+                >
+                  {match.teamB}
+                </button>
+              </div>
+            ))}
+
+            {round.matches.every((m) => m.winner) && roundIndex === tournament.length - 1 && (
+              <button
+                onClick={handleNextRound}
+                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 block mx-auto mt-2"
+              >
+                Continuar a la siguiente ronda
+              </button>
+            )}
+          </div>
+        ))}
+
+        {champion && (
+          <div className="mt-6 text-center">
+            <h2 className="text-2xl font-bold text-green-400">🏆 {champion} es el campeón 🏆</h2>
+          </div>
+        )}
+      </div>
+
+      {/* Mostrar preview automático si todos los nombres están completos y torneo no ha iniciado */}
+      {showPreview && tournament.length === 0 && (
+        <div className="bg-gray-800 rounded-2xl shadow-xl p-6 max-w-4xl mx-auto text-gray-100">
+          <h2 className="text-center text-lg font-semibold mb-4">Emparejamientos Iniciales</h2>
+          <BracketGrid rounds={[{ name: 'Primera ronda', matches: generateFirstRoundMatches(teamNames) }]} />
+        </div>
+      )}
+    </main>
+  )
 }
