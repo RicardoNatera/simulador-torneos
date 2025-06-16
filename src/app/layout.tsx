@@ -5,16 +5,35 @@ import "./globals.css"
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  display: "swap",
 })
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "swap",
 })
 
 export const metadata: Metadata = {
   title: "Simulador de Torneos",
-  description: "Simula torneos eliminatorios interactivos",
+  description: "Simula torneos eliminatorios interactivos con resultados aleatorios",
+  metadataBase: new URL("https://simulador-torneos.vercel.app"),//cambiar al hacer deploy
+  openGraph: {
+    title: "Simulador de Torneos",
+    description: "Genera emparejamientos y simula torneos deportivos en segundos",
+    url: "https://simulador-torneos.vercel.app", //cambiar al hacer deploy
+    siteName: "Simulador de Torneos",
+    locale: "es_ES",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Simulador de Torneos",
+    description: "Simula torneos eliminatorios de forma sencilla e interactiva",
+  },
+  icons: {
+    icon: "/favicon.ico",
+  },
 }
 
 export default function RootLayout({
@@ -25,23 +44,20 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <head>
-        {/* Script para establecer dark/light mode antes del renderizado */}
+        {/* Pre-hydration theme fix to prevent flash */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              // Establece el tema antes del render para evitar parpadeos
               (function () {
-                const theme = localStorage.getItem('theme');
-
-                if (theme === 'dark') {
-                  document.documentElement.classList.add('dark');
-                } else if (theme === 'light') {
-                  document.documentElement.classList.remove('dark');
-                } else {
-                  // Si no hay preferencia guardada, sigue el sistema
+                try {
+                  const theme = localStorage.getItem('theme');
                   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                  document.documentElement.classList.toggle('dark', prefersDark);
-                }
+                  if (theme === 'dark' || (!theme && prefersDark)) {
+                    document.documentElement.classList.add('dark');
+                  } else {
+                    document.documentElement.classList.remove('dark');
+                  }
+                } catch (_) {}
               })();
             `,
           }}
@@ -49,7 +65,7 @@ export default function RootLayout({
       </head>
       <body
         suppressHydrationWarning
-        className={`${geistSans.variable} ${geistMono.variable} antialiased transition-colors duration-300`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased transition-colors duration-300 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100`}
       >
         {children}
       </body>
