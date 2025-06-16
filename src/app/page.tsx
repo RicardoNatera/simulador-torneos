@@ -5,6 +5,7 @@ import TeamInputList from '@/components/TeamInputList'
 import { generateFirstRoundMatches } from '@/lib/generateMatches'
 import { Round, Tournament } from '@/types/tournament'
 import Header from '@/components/Header'
+import Footer from '@/components/Footer'
 
 export default function Home() {
   const [teamCount, setTeamCount] = useState<number>(4)
@@ -84,6 +85,7 @@ export default function Home() {
   }
 
   return (
+    <>
     <main className="min-h-screen bg-white dark:bg-gray-900 p-6 space-y-10 text-gray-900 dark:text-gray-100 transition-colors duration-300">
       <Header/> 
       <div className="w-full max-w-md mx-auto bg-gray-100 dark:bg-gray-800 p-6 rounded-2xl shadow-lg space-y-6">
@@ -212,5 +214,8 @@ export default function Home() {
         )}
       </div>
     </main>
+    <Footer />
+
+    </>
   )
 }
