@@ -7,7 +7,15 @@ export default function Header() {
   return (
     <header className="flex justify-between items-center px-4 py-3 border-b border-gray-200 dark:border-gray-700">
       <div className="text-sm sm:text-base text-gray-700 dark:text-gray-300 font-medium">
-        Hecho por <span className="font-semibold text-blue-600 dark:text-blue-400">Ricardo Natera</span>
+        Hecho por{" "}
+        <a
+          href="https://vscode-portfolio-eight-ochre.vercel.app/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+        >
+          Ricardo Natera
+        </a>
       </div>
 
       <div className="flex items-center gap-4">
